@@ -1,0 +1,109 @@
+package postgresrepo
+
+import (
+	"database/sql"
+	"fmt"
+	"log"
+	repository "sirius/Repository"
+	"sirius/Repository/entities"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+)
+
+type PostgresRepo struct {
+	repository.Repository
+	conn *sqlx.DB
+}
+
+func (ps *PostgresRepo) AddToRequestToFriendList(user entities.User) error {
+	isInFriendListQuery := fmt.Sprintf("SELECT * FROM users WHERE open_key = '%s'", user.OpenKey)
+	err := ps.conn.Get(&entities.User{}, isInFriendListQuery)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			query := fmt.Sprintf("INSERT INTO users(login, open_key, ip, ship) VALUES('%s','%s','%s', 'rtf')", user.Login, user.OpenKey, user.IP)
+			_, err := ps.conn.Query(query)
+			if err != nil {
+				return err
+			}
+			return nil
+		} else {
+			return err
+		}
+	}
+	log.Println("User already in Friendly List")
+	return nil
+}
+
+func (ps *PostgresRepo) AddToWaitToFriendList() {}
+
+func (ps *PostgresRepo) AddToFriendList(user entities.User) error {
+
+	return nil
+}
+
+func (ps *PostgresRepo) DeleteFromRequestToFriendList() {}
+
+func (ps *PostgresRepo) DeleteFromFriendList() {}
+
+func (ps *PostgresRepo) DeleteFromWaitToFriendList(user entities.User) error {
+
+	return nil
+}
+
+func (ps *PostgresRepo) GetUserFromWaitList(user entities.User) (entities.User, error) {
+	var res entities.User
+
+	getQuery := fmt.Sprintf("SELECT * FROM users WHERE open_key = '%s' AND ship = 'wtf'", user.OpenKey)
+	err := ps.conn.Get(&res, getQuery)
+	if err != nil {
+		return entities.User{}, err
+	}
+	return res, nil
+}
+
+func (ps *PostgresRepo) GetFriendlyPeers() ([]entities.User, error) {
+	var res []entities.User
+	getQuery := "SELECT * FROM users WHERE ship = 'f'"
+	err := ps.conn.Select(res, getQuery)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+func (ps *PostgresRepo) InitializeDatabase() error {
+
+	query1 := "SELECT table_name FROM information_schema.tables WHERE table_name = 'users' AND table_schema = 'public'"
+	err := ps.conn.Get(&entities.Table{}, query1)
+	if err == sql.ErrNoRows {
+		createQuery := "CREATE TABLE users(id SERIAL PRIMARY KEY, login TEXT, open_key TEXT, ip TEXT, ship TEXT)"
+		_, err := ps.conn.Query(createQuery)
+		if err != nil {
+			log.Println("Initialize error")
+			return nil
+		}
+	}
+	return nil
+}
+
+func NewPostgresDriver(user, password, port, sslMode string) (*PostgresRepo, error) {
+	var repo PostgresRepo
+	conn, err := sqlx.Connect("postgres", fmt.Sprintf("user = %s password = %s dbname = sirius sslmode = %s port = %s", user, password, sslMode, port))
+	if err != nil {
+		return nil, err
+	}
+	err = conn.Ping()
+	if err != nil {
+		return nil, err
+	}
+	repo.conn = conn
+	err = repo.InitializeDatabase()
+	if err != nil {
+		return &PostgresRepo{}, err
+	}
+	log.Println("Postgres database connected succesfully!")
+	return &PostgresRepo{
+		conn: conn,
+	}, nil
+}

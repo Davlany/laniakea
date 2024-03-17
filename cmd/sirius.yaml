@@ -1,0 +1,19 @@
+User:
+  Login: "Davlany"
+  OpenKey: "-----BEGIN PUBLIC KEY-----
+  MIIBITANBgkqhkiG9w0BAQEFAAOCAQ4AMIIBCQKCAQB6LHaTr7Yy5HkZmZ+3SQYF
+  xsnvrfk5q+a1lnFU6v0Hp+jqeu+1Y2YzF+W8qUemZ/aV5CDNMmv+t8/PrwKYIzX/
+  8L+LsyWiy+Yz1gzbObiHBM3WyniAM9Feyl3N9Mirhq+4eKf1/g1FiN4DDTQ1bvfr
+  g6J8bTg4TShhLW7zZ7R/T6uoCeMhXvi3ShL5IeEtPzlruYuYflEYBJuEW69QoQO9
+  0osmvVkTTN7bWOIK97tYpqRnV3fPZRwSe2YSNef1+rRSST7K9xQFOG9MHWPXHP3V
+  4b24Mymmci2cLbnQpLsZOc3siLA2DwP0akisDqrahM/o54fZJnMqRopMJlty+U2L
+  AgMBAAE=
+  -----END PUBLIC KEY-----"
+Server:
+  Port: 5000
+Privacy:
+  OpenPeersToFriend: true
+  RequestFromNotFriend: false
+Database:
+  DBType: "mongodb"
+  DBString: "mongodb+srv://euler:xbLK6uPRlNdN0JY3@sirius1.bd5egub.mongodb.net/?retryWrites=true&w=majority"

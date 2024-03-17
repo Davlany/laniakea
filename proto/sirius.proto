@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package sirius;
+
+option go_package = "sirius.com/sirius/proto";
+
+message userData{
+    string Login = 1;
+    string OpenKey = 3;
+}
+
+message StatusCode{
+    string Status = 1;
+}
+
+message messageData{
+    string IP = 1;
+    string CryptoMessage = 2;
+}
+message userIPData{
+    string IP = 1;
+    string Login = 2;
+    string OpenKey = 3;
+}
+service Services{
+    rpc GetFriendlyPeers(userData) returns (stream userIPData){};
+    rpc Answer(userData) returns (StatusCode){};
+    rpc RegisterUser(userData) returns (StatusCode){};
+}
