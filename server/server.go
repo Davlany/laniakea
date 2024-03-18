@@ -16,7 +16,7 @@ const URI = "mongodb+srv://euler:xbLK6uPRlNdN0JY3@sirius1.bd5egub.mongodb.net/?r
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "5000"
+		port = "8000"
 	}
 	listen, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -24,7 +24,7 @@ func main() {
 	}
 	log.Println("Listenning @ : " + port)
 
-	repo, err := postgresrepo.NewPostgresDriver("david", "123456", "5432", "disable")
+	repo, err := postgresrepo.NewPostgresDriver("postgres", "123456", "5432", "disable")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -31,23 +31,34 @@ func (ps *PostgresRepo) AddToRequestToFriendList(user entities.User) error {
 			return err
 		}
 	}
-	log.Println("User already in Friendly List")
+	log.Println("User already in friendly list")
 	return nil
 }
 
-func (ps *PostgresRepo) AddToWaitToFriendList() {}
+func (ps *PostgresRepo) AddToWaitToFriendList(user entities.User) error {
+	query := fmt.Sprintf("INSERT INTO users(login, open_key, ip, ship) VALUES('%s','%s','%s','wtf')", user.Login, user.OpenKey, user.IP)
+	_, err := ps.conn.Query(query)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func (ps *PostgresRepo) AddToFriendList(user entities.User) error {
-
+	query := fmt.Sprintf("UPDATE users SET ship = 'f' WHERE open_key = '%s'", user.OpenKey)
+	_, err := ps.conn.Query(query)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (ps *PostgresRepo) DeleteFromRequestToFriendList() {}
-
-func (ps *PostgresRepo) DeleteFromFriendList() {}
-
-func (ps *PostgresRepo) DeleteFromWaitToFriendList(user entities.User) error {
-
+func (ps *PostgresRepo) DeleteUser(user entities.User) error {
+	query := fmt.Sprintf("DELETE FROM users WHERE open_key = '%s';", user.OpenKey)
+	_, err := ps.conn.Query(query)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -65,7 +76,7 @@ func (ps *PostgresRepo) GetUserFromWaitList(user entities.User) (entities.User, 
 func (ps *PostgresRepo) GetFriendlyPeers() ([]entities.User, error) {
 	var res []entities.User
 	getQuery := "SELECT * FROM users WHERE ship = 'f'"
-	err := ps.conn.Select(res, getQuery)
+	err := ps.conn.Select(&res, getQuery)
 	if err != nil {
 		return res, err
 	}
@@ -89,7 +100,7 @@ func (ps *PostgresRepo) InitializeDatabase() error {
 
 func NewPostgresDriver(user, password, port, sslMode string) (*PostgresRepo, error) {
 	var repo PostgresRepo
-	conn, err := sqlx.Connect("postgres", fmt.Sprintf("user = %s password = %s dbname = sirius sslmode = %s port = %s", user, password, sslMode, port))
+	conn, err := sqlx.Connect("postgres", fmt.Sprintf("user = %s password = %s dbname = sirius2 sslmode = %s port = %s", user, password, sslMode, port))
 	if err != nil {
 		return nil, err
 	}

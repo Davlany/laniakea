@@ -2,6 +2,7 @@ package grpcserver
 
 import (
 	"context"
+	"database/sql"
 	repository "sirius/Repository"
 	"sirius/Repository/entities"
 	"sirius/proto"
@@ -49,48 +50,33 @@ func (gs *GrpcServer) Answer(ctx context.Context, userData *proto.UserData) (*pr
 	user := entities.User{
 		IP:      p.Addr.String(),
 		Login:   userData.GetLogin(),
-		OpenKey: userData.GetLogin(),
+		OpenKey: userData.GetOpenKey(),
 	}
 	if user.OpenKey == "" && user.Login == "" {
-		waitUser, err := gs.repo.GetUserFromWaitList(user)
-		if err != nil {
-			return &proto.StatusCode{
-				Status: "100",
-			}, err
-		}
-		if waitUser != user {
+		_, err := gs.repo.GetUserFromWaitList(user)
+		if err == sql.ErrNoRows {
 			return &proto.StatusCode{
 				Status: "401",
-			}, nil
+			}, err
 		}
-		err = gs.repo.DeleteFromWaitToFriendList(user)
+
 		if err != nil {
 			return &proto.StatusCode{
-				Status: "100",
+				Status: "400",
+			}, err
+		}
+		err = gs.repo.DeleteUser(user)
+		if err != nil {
+			return &proto.StatusCode{
+				Status: "400",
 			}, err
 		}
 		return &proto.StatusCode{
 			Status: "200",
-		}, err
-	}
-	waitUser, err := gs.repo.GetUserFromWaitList(user)
-	if err != nil {
-		return &proto.StatusCode{
-			Status: "100",
-		}, err
-	}
-	if waitUser != user {
-		return &proto.StatusCode{
-			Status: "401",
 		}, nil
 	}
-	err = gs.repo.DeleteFromWaitToFriendList(user)
-	if err != nil {
-		return &proto.StatusCode{
-			Status: "100",
-		}, err
-	}
-	err = gs.repo.AddToFriendList(user)
+
+	err := gs.repo.AddToFriendList(user)
 	if err != nil {
 		return &proto.StatusCode{
 			Status: "100",

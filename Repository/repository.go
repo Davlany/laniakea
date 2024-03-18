@@ -5,9 +5,8 @@ import "sirius/Repository/entities"
 type Repository interface {
 	AddToRequestToFriendList(entities.User) error
 	AddToFriendList(entities.User) error
-	DeleteFromRequestToFriendList()
-	DeleteFromWaitToFriendList(entities.User) error
-	DeleteFromFriendList()
+	AddToWaitToFriendList(entities.User) error
 	GetUserFromWaitList(entities.User) (entities.User, error)
 	GetFriendlyPeers() ([]entities.User, error)
+	DeleteUser(entities.User) error
 }
