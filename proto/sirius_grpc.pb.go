@@ -25,6 +25,7 @@ type ServicesClient interface {
 	GetFriendlyPeers(ctx context.Context, in *UserData, opts ...grpc.CallOption) (Services_GetFriendlyPeersClient, error)
 	Answer(ctx context.Context, in *UserData, opts ...grpc.CallOption) (*StatusCode, error)
 	RegisterUser(ctx context.Context, in *UserData, opts ...grpc.CallOption) (*StatusCode, error)
+	AddToWaitUser(ctx context.Context, in *UserData, opts ...grpc.CallOption) (*StatusCode, error)
 }
 
 type servicesClient struct {
@@ -85,6 +86,15 @@ func (c *servicesClient) RegisterUser(ctx context.Context, in *UserData, opts ..
 	return out, nil
 }
 
+func (c *servicesClient) AddToWaitUser(ctx context.Context, in *UserData, opts ...grpc.CallOption) (*StatusCode, error) {
+	out := new(StatusCode)
+	err := c.cc.Invoke(ctx, "/sirius.Services/AddToWaitUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServicesServer is the server API for Services service.
 // All implementations must embed UnimplementedServicesServer
 // for forward compatibility
@@ -92,6 +102,7 @@ type ServicesServer interface {
 	GetFriendlyPeers(*UserData, Services_GetFriendlyPeersServer) error
 	Answer(context.Context, *UserData) (*StatusCode, error)
 	RegisterUser(context.Context, *UserData) (*StatusCode, error)
+	AddToWaitUser(context.Context, *UserData) (*StatusCode, error)
 	mustEmbedUnimplementedServicesServer()
 }
 
@@ -107,6 +118,9 @@ func (UnimplementedServicesServer) Answer(context.Context, *UserData) (*StatusCo
 }
 func (UnimplementedServicesServer) RegisterUser(context.Context, *UserData) (*StatusCode, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterUser not implemented")
+}
+func (UnimplementedServicesServer) AddToWaitUser(context.Context, *UserData) (*StatusCode, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddToWaitUser not implemented")
 }
 func (UnimplementedServicesServer) mustEmbedUnimplementedServicesServer() {}
 
@@ -178,6 +192,24 @@ func _Services_RegisterUser_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Services_AddToWaitUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServicesServer).AddToWaitUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sirius.Services/AddToWaitUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServicesServer).AddToWaitUser(ctx, req.(*UserData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Services_ServiceDesc is the grpc.ServiceDesc for Services service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -192,6 +224,10 @@ var Services_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterUser",
 			Handler:    _Services_RegisterUser_Handler,
+		},
+		{
+			MethodName: "AddToWaitUser",
+			Handler:    _Services_AddToWaitUser_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

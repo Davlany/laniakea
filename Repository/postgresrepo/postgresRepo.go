@@ -83,22 +83,73 @@ func (ps *PostgresRepo) GetFriendlyPeers() ([]entities.User, error) {
 	return res, nil
 }
 
+func (ps *PostgresRepo) GetRequestsToFriend() ([]entities.User, error) {
+	var res []entities.User
+	getQuery := "SELECT * FROM users WHERE ship = 'rtf'"
+	err := ps.conn.Select(&res, getQuery)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+func (ps *PostgresRepo) GetWaitToFriend() ([]entities.User, error) {
+	var res []entities.User
+	getQuery := "SELECT * FROM users WHERE ship = 'wtf'"
+	err := ps.conn.Select(&res, getQuery)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
+func (ps *PostgresRepo) GetOwnerUser() (entities.User, error) {
+	var res entities.User
+	getQuery := "SELECT * FROM owners"
+	err := ps.conn.Get(&res, getQuery)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
 func (ps *PostgresRepo) InitializeDatabase() error {
 
 	query1 := "SELECT table_name FROM information_schema.tables WHERE table_name = 'users' AND table_schema = 'public'"
 	err := ps.conn.Get(&entities.Table{}, query1)
 	if err == sql.ErrNoRows {
 		createQuery := "CREATE TABLE users(id SERIAL PRIMARY KEY, login TEXT, open_key TEXT, ip TEXT, ship TEXT)"
+		createOwnerQuery := "CREATE TABLE owners(id SERIAL PRIMARY KEY, login TEXT, open_key TEXT, ip TEXT, private_key text, gfp TEXT)"
 		_, err := ps.conn.Query(createQuery)
 		if err != nil {
 			log.Println("Initialize error")
 			return nil
 		}
+		_, err = ps.conn.Query(createOwnerQuery)
+		if err != nil {
+			log.Println("Initialize error")
+			return nil
+		}
+
 	}
 	return nil
 }
 
-func NewPostgresDriver(user, password, port, sslMode string) (*PostgresRepo, error) {
+func (ps *PostgresRepo) InitUser(user entities.User, privateKey string) error {
+	query1 := "SELECT * FROM owners;"
+	err := ps.conn.Get(&entities.User{}, query1)
+	if err == sql.ErrNoRows {
+		createQuery := fmt.Sprintf("INSERT INTO owners(login, open_key, ip, private_key, gfp) VALUES ('%s','%s','%s','%s', true)", user.Login, user.OpenKey, user.IP, privateKey)
+		_, err = ps.conn.Query(createQuery)
+		if err != nil {
+			log.Println("Initialize user error", err)
+			return nil
+		}
+	}
+	return err
+}
+
+func NewPostgresDriver(userData entities.User, privateKey string, user, password, port, sslMode string) (*PostgresRepo, error) {
 	var repo PostgresRepo
 	conn, err := sqlx.Connect("postgres", fmt.Sprintf("user = %s password = %s dbname = sirius2 sslmode = %s port = %s", user, password, sslMode, port))
 	if err != nil {
@@ -110,10 +161,16 @@ func NewPostgresDriver(user, password, port, sslMode string) (*PostgresRepo, err
 	}
 	repo.conn = conn
 	err = repo.InitializeDatabase()
+
 	if err != nil {
 		return &PostgresRepo{}, err
 	}
-	log.Println("Postgres database connected succesfully!")
+
+	err = repo.InitUser(userData, privateKey)
+	if err != nil {
+		return nil, err
+	}
+	//log.Println("Postgres database connected succesfully!")
 	return &PostgresRepo{
 		conn: conn,
 	}, nil

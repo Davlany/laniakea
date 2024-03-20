@@ -87,6 +87,20 @@ func (gs *GrpcServer) Answer(ctx context.Context, userData *proto.UserData) (*pr
 	}, nil
 }
 
+func (gs *GrpcServer) AddToWaitUser(ctx context.Context, userData *proto.UserData) (*proto.StatusCode, error) {
+	p, _ := peer.FromContext(ctx)
+	user := entities.User{
+		IP:      p.Addr.String(),
+		Login:   userData.GetLogin(),
+		OpenKey: userData.GetOpenKey(),
+	}
+	err := gs.repo.AddToWaitToFriendList(user)
+	if err != nil {
+		return &proto.StatusCode{Status: "400"}, err
+	}
+	return &proto.StatusCode{Status: "200"}, nil
+}
+
 func (gs *GrpcServer) RegisterUser(ctx context.Context, userData *proto.UserData) (*proto.StatusCode, error) {
 	p, _ := peer.FromContext(ctx)
 	user := entities.User{

@@ -22,8 +22,10 @@ message userIPData{
     string Login = 2;
     string OpenKey = 3;
 }
+
 service Services{
     rpc GetFriendlyPeers(userData) returns (stream userIPData){};
     rpc Answer(userData) returns (StatusCode){};
     rpc RegisterUser(userData) returns (StatusCode){};
+    rpc AddToWaitUser(userData) returns (StatusCode){};
 }
