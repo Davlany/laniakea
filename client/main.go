@@ -19,7 +19,7 @@ func main() {
 	ip := os.Getenv("ip")
 	port := os.Getenv("port")
 	dbUser := os.Getenv("dbuser")
-	server, err := server.NewServer(login, ip, dbUser, "123456", "5432", "disable")
+	server, err := server.NewServer(login, ip, dbUser, "1111", "5432", "disable")
 	if err != nil {
 		log.Fatalln(err)
 	}
