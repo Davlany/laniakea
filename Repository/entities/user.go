@@ -13,3 +13,11 @@ type User struct {
 type Table struct {
 	TableName string `db:"table_name"`
 }
+
+type Message struct {
+	Id        int    `db:"id"`
+	IsOwner   string `db:"is_owner"`
+	From      string `db:"from"`
+	Data      string `db:"data"`
+	TimeStamp string `db:"timestamp"`
+}

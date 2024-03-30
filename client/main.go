@@ -19,7 +19,7 @@ func main() {
 	ip := os.Getenv("ip")
 	port := os.Getenv("port")
 	dbUser := os.Getenv("dbuser")
-	server, err := server.NewServer(login, ip, dbUser, "1111", "5432", "disable")
+	server, err := server.NewServer(login, ip, dbUser, "123456", "5432", "disable")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -53,6 +53,40 @@ func main() {
 				log.Fatalln(err)
 			}
 			prints.PrintRequestsToFriend(users)
+			if len(users) != 0 {
+				fmt.Print("Select user or input command: ")
+				var userSelect int
+				fmt.Scan(&userSelect)
+				fmt.Printf("\x1b[1A\x1b[K")
+				fmt.Print(users[userSelect-1].Login, " ", "Accept(a) or Decline(d): ")
+				var answer string
+				fmt.Scan(&answer)
+				if answer == "a" {
+					conn, err := grpc.Dial(users[userSelect-1].IP, grpc.WithInsecure())
+					if err != nil {
+						log.Fatalln(err)
+					}
+					c := proto.NewServicesClient(conn)
+					owner, err := server.Repo.GetOwnerUser()
+					if err != nil {
+						log.Fatal(err)
+					}
+					res, err := c.Answer(context.Background(), &proto.UserData{
+						Ip:      owner.IP,
+						Login:   owner.Login,
+						OpenKey: owner.OpenKey,
+					})
+					if err != nil {
+						log.Fatal(err)
+					}
+					if res.Status == "201" {
+						fmt.Println("Succesful!")
+					}
+					conn.Close()
+					server.Repo.AddToFriendList(users[userSelect-1])
+				}
+			}
+			fmt.Print("Input command: ")
 		} else if input == "3" {
 			flag = 3
 			prints.ClearConsole()
@@ -80,6 +114,7 @@ func main() {
 				log.Fatalln(err)
 			}
 			res, err := c.RegisterUser(context.Background(), &proto.UserData{
+				Ip:      user.IP,
 				Login:   user.Login,
 				OpenKey: user.OpenKey,
 			})

@@ -3,11 +3,10 @@ package grpcserver
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	repository "sirius/Repository"
 	"sirius/Repository/entities"
 	"sirius/proto"
-
-	"google.golang.org/grpc/peer"
 )
 
 const GFP = true
@@ -46,12 +45,12 @@ func (gs *GrpcServer) GetFriendlyPeers(userData *proto.UserData, stream proto.Se
 }
 
 func (gs *GrpcServer) Answer(ctx context.Context, userData *proto.UserData) (*proto.StatusCode, error) {
-	p, _ := peer.FromContext(ctx)
 	user := entities.User{
-		IP:      p.Addr.String(),
+		IP:      userData.GetIp(),
 		Login:   userData.GetLogin(),
 		OpenKey: userData.GetOpenKey(),
 	}
+	fmt.Println(user)
 	if user.OpenKey == "" && user.Login == "" {
 		_, err := gs.repo.GetUserFromWaitList(user)
 		if err == sql.ErrNoRows {
@@ -75,7 +74,7 @@ func (gs *GrpcServer) Answer(ctx context.Context, userData *proto.UserData) (*pr
 			Status: "200",
 		}, nil
 	}
-
+	fmt.Println("work")
 	err := gs.repo.AddToFriendList(user)
 	if err != nil {
 		return &proto.StatusCode{
@@ -83,14 +82,13 @@ func (gs *GrpcServer) Answer(ctx context.Context, userData *proto.UserData) (*pr
 		}, err
 	}
 	return &proto.StatusCode{
-		Status: "200",
+		Status: "201",
 	}, nil
 }
 
 func (gs *GrpcServer) AddToWaitUser(ctx context.Context, userData *proto.UserData) (*proto.StatusCode, error) {
-	p, _ := peer.FromContext(ctx)
 	user := entities.User{
-		IP:      p.Addr.String(),
+		IP:      userData.GetIp(),
 		Login:   userData.GetLogin(),
 		OpenKey: userData.GetOpenKey(),
 	}
@@ -102,12 +100,12 @@ func (gs *GrpcServer) AddToWaitUser(ctx context.Context, userData *proto.UserDat
 }
 
 func (gs *GrpcServer) RegisterUser(ctx context.Context, userData *proto.UserData) (*proto.StatusCode, error) {
-	p, _ := peer.FromContext(ctx)
 	user := entities.User{
-		IP:      p.Addr.String(),
+		IP:      userData.GetIp(),
 		Login:   userData.GetLogin(),
 		OpenKey: userData.GetOpenKey(),
 	}
+
 	err := gs.repo.AddToRequestToFriendList(user)
 	if err != nil {
 		return &proto.StatusCode{

@@ -45,12 +45,22 @@ func (ps *PostgresRepo) AddToWaitToFriendList(user entities.User) error {
 }
 
 func (ps *PostgresRepo) AddToFriendList(user entities.User) error {
-	query := fmt.Sprintf("UPDATE users SET ship = 'f' WHERE open_key = '%s'", user.OpenKey)
+	query := fmt.Sprintf("UPDATE users SET ship = 'f' WHERE ip = '%s'", user.IP)
 	_, err := ps.conn.Query(query)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (ps *PostgresRepo) GetPrivateKey() (string, error) {
+	var res string
+	query := "SELECT private_key FROM owners"
+	err := ps.conn.Get(&res, query)
+	if err != nil {
+		return "", err
+	}
+	return res, nil
 }
 
 func (ps *PostgresRepo) DeleteUser(user entities.User) error {
@@ -103,6 +113,25 @@ func (ps *PostgresRepo) GetWaitToFriend() ([]entities.User, error) {
 	return res, nil
 }
 
+func (ps *PostgresRepo) GetAllMessages(openKey string) ([]entities.Message, error) {
+	var msgs []entities.Message
+	query := fmt.Sprintf("SELECT * FROM WHERE from = '%s' OR to = '%s'", openKey, openKey)
+	err := ps.conn.Select(&msgs, query)
+	if err != nil {
+		return nil, err
+	}
+	return msgs, nil
+}
+
+func (ps *PostgresRepo) AddMessage(msg entities.Message) error {
+	query := fmt.Sprintf("INSERT INTO messages(is_owner, from, data, timestamp) VALUES (%s,'%s','%s','%s')", msg.IsOwner, msg.From, msg.Data, msg.TimeStamp)
+	_, err := ps.conn.Query(query)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (ps *PostgresRepo) GetOwnerUser() (entities.User, error) {
 	var res entities.User
 	getQuery := "SELECT * FROM owners"
@@ -118,17 +147,23 @@ func (ps *PostgresRepo) InitializeDatabase() error {
 	query1 := "SELECT table_name FROM information_schema.tables WHERE table_name = 'users' AND table_schema = 'public'"
 	err := ps.conn.Get(&entities.Table{}, query1)
 	if err == sql.ErrNoRows {
-		createQuery := "CREATE TABLE users(id SERIAL PRIMARY KEY, login TEXT, open_key TEXT, ip TEXT, ship TEXT)"
-		createOwnerQuery := "CREATE TABLE owners(id SERIAL PRIMARY KEY, login TEXT, open_key TEXT, ip TEXT, private_key text, gfp TEXT)"
+		createQuery := "CREATE TABLE users(id SERIAL, login TEXT, open_key TEXT, ip TEXT, ship TEXT);"
+		createOwnerQuery := "CREATE TABLE owners(id, login TEXT, open_key TEXT, ip TEXT, private_key text, gfp TEXT);"
+		createMessageTable := "CREATE TABLE messages(id SERIAL PRIMARY KEY, from TEXT, to TEXT, data TEXT, timestamp string);"
 		_, err := ps.conn.Query(createQuery)
 		if err != nil {
 			log.Println("Initialize error")
-			return nil
+			return err
 		}
 		_, err = ps.conn.Query(createOwnerQuery)
 		if err != nil {
 			log.Println("Initialize error")
-			return nil
+			return err
+		}
+		_, err = ps.conn.Query(createMessageTable)
+		if err != nil {
+			log.Println("Initialize error")
+			return err
 		}
 
 	}

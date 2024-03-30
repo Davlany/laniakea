@@ -6,6 +6,7 @@ option go_package = "sirius.com/sirius/proto";
 
 message userData{
     string Login = 1;
+    string Ip = 2;
     string OpenKey = 3;
 }
 
@@ -14,9 +15,11 @@ message StatusCode{
 }
 
 message messageData{
-    string IP = 1;
-    string CryptoMessage = 2;
+    string From = 1;
+    string CypherText = 2;
+    string TimeStamp = 3;
 }
+
 message userIPData{
     string IP = 1;
     string Login = 2;
@@ -24,6 +27,7 @@ message userIPData{
 }
 
 service Services{
+    rpc ReciveMessage(stream messageData) returns (StatusCode){};
     rpc GetFriendlyPeers(userData) returns (stream userIPData){};
     rpc Answer(userData) returns (StatusCode){};
     rpc RegisterUser(userData) returns (StatusCode){};
