@@ -134,6 +134,9 @@ func main() {
 				fmt.Println("Request succesfully!")
 			}
 
+		} else if input == "5" {
+			prints.ClearConsole()
+
 		} else if input == "6" {
 			flag = 6
 			prints.ClearConsole()

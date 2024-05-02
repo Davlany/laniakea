@@ -34,12 +34,12 @@ func PrintConfiguration(user entities.User) {
 }
 
 func PrintMainPage() {
-	ClearConsole()
+	// ClearConsole()
 	PrintLogo()
 	fmt.Print("[\033[96m1\033[97m] Friendly peers\t[\033[96m4\033[97m] Connect to peer for register\n\n")
 	fmt.Print("[\033[96m2\033[97m] Requests to friend\t[\033[96m5\033[97m] Connect to peer for chating\n\n")
 	fmt.Print("[\033[96m3\033[97m] Wait to friend\t[\033[96m6\033[97m] Peer configurations\n\n")
-	fmt.Print("Set the number: ")
+	// fmt.Print("Set the number: ")
 }
 
 func PrintFriendlyPeers(users []entities.User) {

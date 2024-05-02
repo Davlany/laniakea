@@ -18,8 +18,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-//const URI = "mongodb+srv://euler:xbLK6uPRlNdN0JY3@sirius1.bd5egub.mongodb.net/?retryWrites=true&w=majority"
-
 type Server struct {
 	Repo repository.Repository
 }
@@ -32,7 +30,6 @@ func (s *Server) ServerRun(port string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	//log.Println("Listenning @ : " + port)
 
 	grpcServer := grpc.NewServer()
 

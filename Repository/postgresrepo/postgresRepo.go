@@ -148,8 +148,8 @@ func (ps *PostgresRepo) InitializeDatabase() error {
 	err := ps.conn.Get(&entities.Table{}, query1)
 	if err == sql.ErrNoRows {
 		createQuery := "CREATE TABLE users(id SERIAL, login TEXT, open_key TEXT, ip TEXT, ship TEXT);"
-		createOwnerQuery := "CREATE TABLE owners(id, login TEXT, open_key TEXT, ip TEXT, private_key text, gfp TEXT);"
-		createMessageTable := "CREATE TABLE messages(id SERIAL PRIMARY KEY, from TEXT, to TEXT, data TEXT, timestamp string);"
+		createOwnerQuery := "CREATE TABLE owners(id SERIAL, login TEXT, open_key TEXT, ip TEXT, private_key TEXT, gfp TEXT);"
+		createMessageTable := "CREATE TABLE messages(id SERIAL PRIMARY KEY, from_user TEXT, to_user TEXT, data TEXT, timestamp TEXT);"
 		_, err := ps.conn.Query(createQuery)
 		if err != nil {
 			log.Println("Initialize error")
@@ -186,7 +186,7 @@ func (ps *PostgresRepo) InitUser(user entities.User, privateKey string) error {
 
 func NewPostgresDriver(userData entities.User, privateKey string, user, password, port, sslMode string) (*PostgresRepo, error) {
 	var repo PostgresRepo
-	conn, err := sqlx.Connect("postgres", fmt.Sprintf("user = %s password = %s dbname = sirius2 sslmode = %s port = %s", user, password, sslMode, port))
+	conn, err := sqlx.Connect("postgres", fmt.Sprintf("user = %s password = %s dbname = sirius sslmode = %s port = %s", user, password, sslMode, port))
 	if err != nil {
 		return nil, err
 	}
